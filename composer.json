@@ -7,16 +7,10 @@
     "authors": [
         { "name": "Moisès Gallego", "email": "moisesgallego@gmail.com" }
     ],
-
     "autoload": {
         "psr-0": { "MGP\\ESModelBundle": "" }
     },
     "target-dir": "MGP/ESModelBundle",
-    "extra": {
-        "branch-alias": {
-            "dev-master": "1.0.x-dev"
-        }
-    },
     "require": {
         "php": ">=5.3.3",
         "friendsofsymfony/elastica-bundle": "3.0.*@dev"
