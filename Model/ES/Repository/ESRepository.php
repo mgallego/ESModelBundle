@@ -39,15 +39,17 @@ class ESRepository implements ESRepositoryInterface
     public function paginate(\Elastica\Query $query, $currentPage)
     {
         $itemsPerPage = $this->docsPerPage;
-        $totalPages = $this->typeClient->search($query)->getTotalHits() + 1; 
+        $totalItems = $this->typeClient->search($query)->getTotalHits() + 1; 
+        $totalPages = floor(($totalItems/$this->docsPerPage) + 1); 
+        $numPagesToShow = 5;
         $pagesToShow = [];
 
-        $firstPage = $currentPage - ($itemsPerPage/2);
+        $firstPage = $currentPage - $numPagesToShow;
         if ($firstPage <= 0) {
             $firstPage = 1;
         }
 
-        foreach (range($firstPage, $firstPage + $itemsPerPage) as $i) {
+        foreach (range($firstPage, $firstPage + ($numPagesToShow * 2) ) as $i) {
             if ($i <= $totalPages) {
                 $pagesToShow[] = $i;
             }
@@ -57,12 +59,16 @@ class ESRepository implements ESRepositoryInterface
         $pagination['prev_page'] = $totalPages - 1;
         if ($currentPage <= $totalPages) {
             $pagination['next_page'] = $currentPage + 1;
+            $pagination['current_page'] = (int) $currentPage;
             $pagination['prev_page'] = $currentPage - 1;
             $pagination['pages_to_show'] = $pagesToShow;
-            $pagination['last_page'] = $totalPages;
+            $pagination['last_page'] = (int) $totalPages;
+            $pagination['total_items'] = $totalItems;
         }
         $query->setFrom(($currentPage -1) * $itemsPerPage);
-        $result['data'] = $this->typeClient->search($query, $itemsPerPage)->getResults();
+        $resultSet = $this->typeClient->search($query, $itemsPerPage);
+        $result['facets'] = $resultSet->getFacets();
+        $result['data'] = $resultSet->getResults();
         $result['pagination'] = $pagination;
         return $result;
     }
@@ -81,4 +87,36 @@ class ESRepository implements ESRepositoryInterface
         }
         return $result;
     }
+
+    /**
+     * Modifies a string to remove all non ASCII characters and spaces.
+     */
+    static public function slugify($text)
+    {
+        // replace non letter or digits by -
+        $text = preg_replace('~[^\\pL\d]+~u', '-', $text);
+    
+        // trim
+        $text = trim($text, '-');
+        
+        // transliterate
+        if (function_exists('iconv'))
+            {
+                $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
+            }
+ 
+            // lowercase
+        $text = strtolower($text);
+ 
+        // remove unwanted characters
+        $text = preg_replace('~[^-\w]+~', '', $text);
+ 
+        if (empty($text))
+            {
+                return 'n-a';
+            }
+ 
+        return $text;
+    }
+
 }
