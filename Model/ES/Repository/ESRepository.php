@@ -40,7 +40,7 @@ class ESRepository implements ESRepositoryInterface
     {
         $itemsPerPage = $this->docsPerPage;
         $totalItems = $this->typeClient->search($query)->getTotalHits() + 1; 
-        $totalPages = floor(($totalItems/$this->docsPerPage) + 1); 
+        $totalPages = ceil(($totalItems/$this->docsPerPage)); 
         $numPagesToShow = 5;
         $pagesToShow = [];
 
