@@ -65,7 +65,13 @@ class ESRepository implements ESRepositoryInterface
             $pagination['last_page'] = (int) $totalPages;
             $pagination['total_items'] = $totalItems;
         }
-        $query->setFrom(($currentPage -1) * $itemsPerPage);
+
+        $from = (($currentPage - 1) * $itemsPerPage) - 1; //The first document is 0
+        if ($from < 0) {
+            $from = 0;
+        }
+
+        $query->setFrom($from); 
         $resultSet = $this->typeClient->search($query, $itemsPerPage);
         $result['facets'] = $resultSet->getFacets();
         $result['data'] = $resultSet->getResults();
